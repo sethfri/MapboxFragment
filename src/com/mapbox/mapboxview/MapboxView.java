@@ -37,7 +37,7 @@ public class MapboxView extends MapView {
 		
 		GoogleMap map = getMap();
 		// TODO - Set the correct width, height
-		MapboxTileProvider tileProvider = new MapboxTileProvider(200, 200);
+		MapboxTileProvider tileProvider = new MapboxTileProvider(200, 200, this.mapID);
 		
 		map.addTileOverlay(new TileOverlayOptions().tileProvider(tileProvider));
 	}
@@ -47,8 +47,12 @@ public class MapboxView extends MapView {
 	}
 	
 	public class MapboxTileProvider extends UrlTileProvider {
-		public MapboxTileProvider(int width, int height) {
+		private String mapID;
+		
+		public MapboxTileProvider(int width, int height, String mapID) {
 			super(width, height);
+			
+			this.mapID = mapID;
 		}
 
 		@Override
@@ -56,7 +60,7 @@ public class MapboxView extends MapView {
 			String[] letters = { "a", "b", "c", "d" };
 			int randomIndex = new Random().nextInt(4);
 			
-			String URLString = String.format(Locale.ENGLISH, "https://%s.tiles.mapbox.com/v3/%s/%d/%d/%d%s.%s", letters[randomIndex], zoom, x, y, "2x", "png");
+			String URLString = String.format(Locale.ENGLISH, "https://%s.tiles.mapbox.com/v3/%s/%d/%d/%d%s.%s", letters[randomIndex], this.mapID, zoom, x, y, "2x", "png");
 			URL url = null;
 			
 			try {
