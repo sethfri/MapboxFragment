@@ -2,6 +2,8 @@ package com.mapbox.mapboxview;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Random;
 
@@ -35,13 +37,26 @@ public class MapboxView extends MapView {
 		
 		this.mapID = mapID;
 		
-		// TODO - Get JSON tile dictionary from format(Locale.ENGLISH, "https://a.tiles.mapbox.com/v3/%s.json", this.mapID)
+		// TODO - Get JSON tile map from format(Locale.ENGLISH, "https://a.tiles.mapbox.com/v3/%s.json", this.mapID)
+		HashMap<String, Object> tileMap = null;
 		
+		ArrayList<Number> centerArrayList = (ArrayList<Number>) tileMap.get("center");
+		LatLng centerCoordinate = new LatLng(centerArrayList.get(1).doubleValue(), centerArrayList.get(0).doubleValue());
 		
+		ArrayList<Number> boundsArrayList = (ArrayList<Number>) tileMap.get("bounds");
+		LatLng northeastCoordinate = new LatLng(((Number) boundsArrayList.get(3)).doubleValue(), ((Number) boundsArrayList.get(2)).doubleValue());
+		LatLng southwestCoordinate = new LatLng(((Number) boundsArrayList.get(1)).doubleValue(), ((Number) boundsArrayList.get(0)).doubleValue());
+		LatLngBounds bounds = new LatLngBounds(southwestCoordinate, northeastCoordinate);
+		
+		int minZoom = ((Number) tileMap.get("minzoom")).intValue();
+		int maxZoom = ((Number) tileMap.get("maxzoom")).intValue();
 		
 		GoogleMap map = getMap();
+		// TODO - No idea if 5 is a good padding number - I just chose one
+		map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 5));
+		
 		// TODO - Set the correct width, height
-		MapboxTileProvider tileProvider = new MapboxTileProvider(200, 200, this.mapID);
+		MapboxTileProvider tileProvider = new MapboxTileProvider(200, 200, this.mapID, minZoom, maxZoom);
 		
 		map.addTileOverlay(new TileOverlayOptions().tileProvider(tileProvider));
 	}
@@ -52,11 +67,15 @@ public class MapboxView extends MapView {
 	
 	public class MapboxTileProvider extends UrlTileProvider {
 		private String mapID;
+		private int minZoom;
+		private int maxZoom;
 		
-		public MapboxTileProvider(int width, int height, String mapID) {
+		public MapboxTileProvider(int width, int height, String mapID, int minZoom, int maxZoom) {
 			super(width, height);
 			
 			this.mapID = mapID;
+			this.minZoom = minZoom;
+			this.maxZoom = maxZoom;
 		}
 
 		@Override
@@ -82,9 +101,6 @@ public class MapboxView extends MapView {
 		 * Check that the tile server supports the requested x, y and zoom.
 		 */
 		private boolean checkTileExists(int x, int y, int zoom) {
-			int minZoom = 12;
-			int maxZoom = 16;
-			
 			boolean tileExists = true;
 
 			if ((zoom < minZoom || zoom > maxZoom)) {

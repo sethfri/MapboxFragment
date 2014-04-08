@@ -1,6 +1,6 @@
 package com.mapbox.mapboxview;
 
-import com.mapbox.mapboxmap.R;
+import com.mapbox.mapboxview.R;
 
 import android.os.Bundle;
 import android.app.Activity;
