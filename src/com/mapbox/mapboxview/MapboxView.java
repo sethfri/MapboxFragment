@@ -35,6 +35,10 @@ public class MapboxView extends MapView {
 		
 		this.mapID = mapID;
 		
+		// TODO - Get JSON tile dictionary from format(Locale.ENGLISH, "https://a.tiles.mapbox.com/v3/%s.json", this.mapID)
+		
+		
+		
 		GoogleMap map = getMap();
 		// TODO - Set the correct width, height
 		MapboxTileProvider tileProvider = new MapboxTileProvider(200, 200, this.mapID);
@@ -63,14 +67,31 @@ public class MapboxView extends MapView {
 			String URLString = String.format(Locale.ENGLISH, "https://%s.tiles.mapbox.com/v3/%s/%d/%d/%d%s.%s", letters[randomIndex], this.mapID, zoom, x, y, "2x", "png");
 			URL url = null;
 			
-			try {
-				url = new URL(URLString);
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			if (checkTileExists(x, y, zoom)) {
+				try {
+					url = new URL(URLString);
+				} catch (MalformedURLException e) {
+					throw new AssertionError(e);
+				}
 			}
 			
 			return url;
+		}
+
+		/*
+		 * Check that the tile server supports the requested x, y and zoom.
+		 */
+		private boolean checkTileExists(int x, int y, int zoom) {
+			int minZoom = 12;
+			int maxZoom = 16;
+			
+			boolean tileExists = true;
+
+			if ((zoom < minZoom || zoom > maxZoom)) {
+				tileExists = false;
+			}
+
+			return tileExists;
 		}
 	}
 }
