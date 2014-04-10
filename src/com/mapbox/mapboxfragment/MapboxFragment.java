@@ -48,10 +48,11 @@ public class MapboxFragment extends MapFragment {
 	
 	public void setMapID(String mapID) {
 		url = String.format(Locale.ENGLISH, "https://a.tiles.mapbox.com/v3/%s.json", mapID);
+		this.mapID = mapID;
 		
 		gmap = getMap();
 		
-		new TileLoader().execute(new WeakReference<MapboxFragment>(this));
+		new TileLoader().execute();
 	}
 	
 	public class MapboxTileProvider extends UrlTileProvider {
@@ -75,6 +76,8 @@ public class MapboxFragment extends MapFragment {
 			String URLString = String.format(Locale.ENGLISH, 
 					"https://%s.tiles.mapbox.com/v3/%s/%d/%d/%d%s.%s", 
 					letters[randomIndex], this.mapID, zoom, x, y, "@2x", "png");
+			
+			Log.d(TAG, "URL: " + URLString);
 			URL url = null;
 			
 			if (checkTileExists(x, y, zoom)) {
@@ -103,10 +106,10 @@ public class MapboxFragment extends MapFragment {
 	}
 	
 	private class TileLoader extends 
-		AsyncTask<WeakReference<MapboxFragment>, Void, HashMap<String, Object> > {
+		AsyncTask<Void, Void, HashMap<String, Object> > {
 		
 		@Override
-		protected HashMap<String, Object> doInBackground(WeakReference<MapboxFragment>... handlers) {
+		protected HashMap<String, Object> doInBackground(Void... handlers) {
 			HashMap<String, Object> tileMap = new HashMap<String, Object>();
 			try {
 				
@@ -141,22 +144,6 @@ public class MapboxFragment extends MapFragment {
 				tileMap.put("bounds", boundsArr);
 				tileMap.put("minzoom", minZoom);
 				tileMap.put("maxzoom", maxZoom);
-				
-				/*ArrayList<Number> centerArrayList = (ArrayList<Number>) tileMap.get("center");
-				LatLng centerCoordinate = new LatLng(centerArrayList.get(1).doubleValue(), centerArrayList.get(0).doubleValue());
-				
-				ArrayList<Number> boundsArrayList = (ArrayList<Number>) tileMap.get("bounds");
-				LatLng northeastCoordinate = new LatLng(((Number) boundsArrayList.get(3)).doubleValue(), ((Number) boundsArrayList.get(2)).doubleValue());
-				LatLng southwestCoordinate = new LatLng(((Number) boundsArrayList.get(1)).doubleValue(), ((Number) boundsArrayList.get(0)).doubleValue());
-				bounds = new LatLngBounds(southwestCoordinate, northeastCoordinate);
-				
-				//int minZoom = ((Number) tileMap.get("minzoom")).intValue();
-				//int maxZoom = ((Number) tileMap.get("maxzoom")).intValue();
-				
-				// TODO - Set the correct width, height
-				MapboxTileProvider tileProvider = new MapboxTileProvider(256, 256, mapID, minZoom, maxZoom);
-				
-				gmap.addTileOverlay(new TileOverlayOptions().tileProvider(tileProvider));*/
 				
 				return tileMap;
 				
@@ -196,7 +183,7 @@ public class MapboxFragment extends MapFragment {
 			gmap.addTileOverlay(new TileOverlayOptions().tileProvider(tileProvider));
 			
 			// TODO - No idea if 5 is a good padding number - I just chose one
-			gmap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 5));
+			gmap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 15));
 		}	
 		
 	}
