@@ -191,7 +191,7 @@ public class MapboxFragment extends MapFragment {
 			int maxZoom = ((Number) tileMap.get("maxzoom")).intValue();
 			
 			// TODO - Set the correct width, height
-			MapboxTileProvider tileProvider = new MapboxTileProvider(200, 200, mapID, minZoom, maxZoom);
+			MapboxTileProvider tileProvider = new MapboxTileProvider(256, 256, mapID, minZoom, maxZoom);
 			
 			gmap.addTileOverlay(new TileOverlayOptions().tileProvider(tileProvider));
 			
