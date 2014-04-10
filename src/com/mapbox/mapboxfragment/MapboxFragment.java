@@ -74,7 +74,7 @@ public class MapboxFragment extends MapFragment {
 			
 			String URLString = String.format(Locale.ENGLISH, 
 					"https://%s.tiles.mapbox.com/v3/%s/%d/%d/%d%s.%s", 
-					letters[randomIndex], this.mapID, zoom, x, y, "2x", "png");
+					letters[randomIndex], this.mapID, zoom, x, y, "@2x", "png");
 			URL url = null;
 			
 			if (checkTileExists(x, y, zoom)) {
