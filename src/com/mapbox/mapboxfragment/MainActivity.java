@@ -1,46 +1,16 @@
-package com.mapbox.mapboxview;
+package com.mapbox.mapboxfragment;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Random;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.TileOverlayOptions;
-import com.google.android.gms.maps.model.UrlTileProvider;
-import android.os.AsyncTask;
-import android.os.Bundle;
 import android.app.Activity;
-import android.util.Log;
+import android.os.Bundle;
 import android.view.Menu;
 
-public class MainActivity extends Activity {
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.mapbox.mapboxfragment.R;
 
-	private String mapID;
-	private GoogleMap gmap;
-	private LatLngBounds bounds;
-	private String url = "";
+public class MainActivity extends Activity {
+	//private GoogleMap gmap;
+	//private LatLngBounds bounds;
 	private final String TAG = this.getClass().getSimpleName();
 
 	@Override
@@ -49,14 +19,10 @@ public class MainActivity extends Activity {
 		//setContentView(new MapboxView(getApplicationContext(), "musiccitycenter.ha727h06"));
 		setContentView(R.layout.map_fragment);
 		
-		mapID = "musiccitycenter.vqloko6r";
-		url = String.format(Locale.ENGLISH, "https://a.tiles.mapbox.com/v3/%s.json", mapID);
+		//gmap = ((MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment)).getMap();
+		//gmap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(36.157158, -86.777326), 15));
 		
-		
-		gmap = ((MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment)).getMap();
-		gmap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(36.157158, -86.777326), 15));
-		
-		new TileLoader().execute();
+		//new TileLoader().execute();
 	}
 
 	@Override
@@ -66,7 +32,16 @@ public class MainActivity extends Activity {
 		return true;
 	}
 	
-	private class TileLoader extends 
+	@Override
+	protected void onResume() { 
+		super.onResume();
+		
+		MapboxFragment fragment = (MapboxFragment) getFragmentManager().findFragmentById(R.id.mapFragment);
+		
+		fragment.setMapID("musiccitycenter.vqloko6r");
+	}
+	
+	/*private class TileLoader extends 
 		AsyncTask<Void, Void, HashMap<String, Object> > {
 		
 		@Override
@@ -118,20 +93,20 @@ public class MainActivity extends Activity {
 				
 			} catch (ClientProtocolException e) {
 				Log.d(TAG, "ClientProtocol Exception thrown");
-				/** handle specific exceptions */
+				/** handle specific exceptions 
 			} catch (IOException e) {
 				Log.d(TAG, "IO Exception thrown");
-				/** handle specific exceptions */
+				/** handle specific exceptions 
 			} catch (JSONException e) {
 				Log.d(TAG, "JSON Exception thrown");
-				/** handle specific exceptions */
+				/** handle specific exceptions 
 			}
 			
 			return null;
-		}	
+		}	*/
 		
 		
-		@Override
+		/*@Override
 		protected void onPostExecute(HashMap<String, Object> tileMap) {			
 			//setProgressVisibility(false, null, null);
 			
@@ -147,7 +122,7 @@ public class MainActivity extends Activity {
 			int maxZoom = ((Number) tileMap.get("maxzoom")).intValue();
 			
 			// TODO - Set the correct width, height
-			MapboxTileProvider tileProvider = new MapboxTileProvider(200, 200, mapID, minZoom, maxZoom);
+			MapboxTileProvider tileProvider = new MapboxTileProvider(256, 256, mapID, minZoom, maxZoom);
 			
 			gmap.addTileOverlay(new TileOverlayOptions().tileProvider(tileProvider));
 		}	
@@ -186,12 +161,12 @@ public class MainActivity extends Activity {
 			
 			Log.d(TAG, "URL: " + url.toString());
 			return url;
-		}
+		}*/
 
 		/*
 		 * Check that the tile server supports the requested x, y and zoom.
 		 */
-		private boolean checkTileExists(int x, int y, int zoom) {
+		/*private boolean checkTileExists(int x, int y, int zoom) {
 			boolean tileExists = true;
 
 			if ((zoom < minZoom || zoom > maxZoom)) {
@@ -200,30 +175,5 @@ public class MainActivity extends Activity {
 
 			return tileExists;
 		}
-	}
-	
-	private String getContent(String url) throws ClientProtocolException, IOException {
-		StringBuilder sb = new StringBuilder();
-
-		HttpClient client = new DefaultHttpClient();
-		HttpParams httpParams = client.getParams();
-		HttpConnectionParams.setConnectionTimeout(httpParams, 3000);
-		HttpConnectionParams.setSoTimeout(httpParams, 5000);
-		HttpResponse response = client.execute(new HttpGet(url));
-		HttpEntity entity = response.getEntity();
-		
-		if (entity != null) {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					entity.getContent(), "UTF-8"), 8192);
-
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				sb.append(line);
-			}
-			reader.close();
-		}
-		
-		return sb.toString();
-	}
-
+	}*/
 }

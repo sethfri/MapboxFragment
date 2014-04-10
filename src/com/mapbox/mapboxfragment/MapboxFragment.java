@@ -1,4 +1,4 @@
-package com.mapbox.mapboxview;
+package com.mapbox.mapboxfragment;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -9,7 +9,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Random;
 
 import org.apache.http.HttpEntity;
@@ -24,16 +23,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.content.Context;
 import android.os.AsyncTask;
-import android.util.AttributeSet;
 import android.util.Log;
 
 import com.google.android.gms.maps.*;
-import com.google.android.gms.maps.GoogleMap.OnMapLoadedCallback;
 import com.google.android.gms.maps.model.*;
 
-public class MapboxView extends MapView implements OnMapLoadedCallback {
+public class MapboxFragment extends MapFragment {
 	
 	private final String TAG = this.getClass().getSimpleName();
 	
@@ -42,36 +38,21 @@ public class MapboxView extends MapView implements OnMapLoadedCallback {
 	private LatLngBounds bounds;
 	private String url = "";
 	
-	public MapboxView(Context context) {
-		super(context);
+	public MapboxFragment() {
+		super();
 	}
 	
-	public MapboxView(Context context, AttributeSet attrs) {
-		super(context, attrs);
+	public String getMapID() {
+		return mapID;
 	}
 	
-	public MapboxView(Context context, AttributeSet attrs, int defStyle) {
-		super(context, attrs, defStyle);
-	}
-	
-	public MapboxView(Context context, GoogleMapOptions options) {
-		super(context, options);
-	}
-	
-	public MapboxView(Context context, String mapID) {
-		this(context);
-		
-		mapID = "musiccitycenter.vqloko6r";
-		
+	public void setMapID(String mapID) {
 		url = String.format(Locale.ENGLISH, "https://a.tiles.mapbox.com/v3/%s.json", mapID);
-		// TODO - Get JSON tile map from format(Locale.ENGLISH, "https://a.tiles.mapbox.com/v3/%s.json", this.mapID)
+		this.mapID = mapID;
 		
 		gmap = getMap();
-		new TileLoader().execute(new WeakReference<MapboxView>(this));
-	}
-	
-	String getMapID() {
-		return mapID;
+		
+		new TileLoader().execute();
 	}
 	
 	public class MapboxTileProvider extends UrlTileProvider {
@@ -94,7 +75,9 @@ public class MapboxView extends MapView implements OnMapLoadedCallback {
 			
 			String URLString = String.format(Locale.ENGLISH, 
 					"https://%s.tiles.mapbox.com/v3/%s/%d/%d/%d%s.%s", 
-					letters[randomIndex], this.mapID, zoom, x, y, "2x", "png");
+					letters[randomIndex], this.mapID, zoom, x, y, "@2x", "png");
+			
+			Log.d(TAG, "URL: " + URLString);
 			URL url = null;
 			
 			if (checkTileExists(x, y, zoom)) {
@@ -123,18 +106,10 @@ public class MapboxView extends MapView implements OnMapLoadedCallback {
 	}
 	
 	private class TileLoader extends 
-		AsyncTask<WeakReference<MapboxView>, Void, HashMap<String, Object> > {
+		AsyncTask<Void, Void, HashMap<String, Object> > {
 		
 		@Override
-		protected void onPreExecute() {
-			//setProgressVisibility(true, "Retrieving Tiles", "Shouldn't be long now!");
-			
-		}
-		
-
-		@Override
-		protected HashMap<String, Object> doInBackground(WeakReference<MapboxView>... handlers) {
-			
+		protected HashMap<String, Object> doInBackground(Void... handlers) {
 			HashMap<String, Object> tileMap = new HashMap<String, Object>();
 			try {
 				
@@ -170,27 +145,6 @@ public class MapboxView extends MapView implements OnMapLoadedCallback {
 				tileMap.put("minzoom", minZoom);
 				tileMap.put("maxzoom", maxZoom);
 				
-				ArrayList<Number> centerArrayList = (ArrayList<Number>) tileMap.get("center");
-				LatLng centerCoordinate = new LatLng(centerArrayList.get(1).doubleValue(), centerArrayList.get(0).doubleValue());
-				
-				ArrayList<Number> boundsArrayList = (ArrayList<Number>) tileMap.get("bounds");
-				LatLng northeastCoordinate = new LatLng(((Number) boundsArrayList.get(3)).doubleValue(), ((Number) boundsArrayList.get(2)).doubleValue());
-				LatLng southwestCoordinate = new LatLng(((Number) boundsArrayList.get(1)).doubleValue(), ((Number) boundsArrayList.get(0)).doubleValue());
-				bounds = new LatLngBounds(southwestCoordinate, northeastCoordinate);
-				
-				//int minZoom = ((Number) tileMap.get("minzoom")).intValue();
-				//int maxZoom = ((Number) tileMap.get("maxzoom")).intValue();
-				
-				// TODO - Set the correct width, height
-				MapboxTileProvider tileProvider = new MapboxTileProvider(200, 200, mapID, minZoom, maxZoom);
-				
-				gmap.addTileOverlay(new TileOverlayOptions().tileProvider(tileProvider));
-				
-				Log.d(TAG, "spinning");
-				while(gmap == null) {};
-				handlers[0].get().setGMapCallback();
-				Log.d(TAG, "done spinning");
-				
 				return tileMap;
 				
 			} catch (ClientProtocolException e) {
@@ -211,7 +165,7 @@ public class MapboxView extends MapView implements OnMapLoadedCallback {
 		@Override
 		protected void onPostExecute(HashMap<String, Object> tileMap) {			
 			//setProgressVisibility(false, null, null);
-			/*
+			
 			ArrayList<Number> centerArrayList = (ArrayList<Number>) tileMap.get("center");
 			LatLng centerCoordinate = new LatLng(centerArrayList.get(1).doubleValue(), centerArrayList.get(0).doubleValue());
 			
@@ -224,9 +178,12 @@ public class MapboxView extends MapView implements OnMapLoadedCallback {
 			int maxZoom = ((Number) tileMap.get("maxzoom")).intValue();
 			
 			// TODO - Set the correct width, height
-			MapboxTileProvider tileProvider = new MapboxTileProvider(200, 200, mapID, minZoom, maxZoom);
+			MapboxTileProvider tileProvider = new MapboxTileProvider(256, 256, mapID, minZoom, maxZoom);
 			
-			gmap.addTileOverlay(new TileOverlayOptions().tileProvider(tileProvider));*/
+			gmap.addTileOverlay(new TileOverlayOptions().tileProvider(tileProvider));
+			
+			// TODO - No idea if 5 is a good padding number - I just chose one
+			gmap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 15));
 		}	
 		
 	}
@@ -253,16 +210,5 @@ public class MapboxView extends MapView implements OnMapLoadedCallback {
 		}
 		
 		return sb.toString();
-	}
-	
-	private void setGMapCallback() {
-		gmap.setOnMapLoadedCallback(this);
-	}
-	
-	@Override
-	public void onMapLoaded() {
-		
-		// TODO - No idea if 5 is a good padding number - I just chose one
-		gmap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 5));
 	}
 }
