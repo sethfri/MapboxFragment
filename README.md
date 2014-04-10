@@ -5,8 +5,9 @@ MapboxFragment is an Android Fragment allowing one-line integration of Mapbox cu
 ## Usage
 
 1. [Set up the Google Maps Android API](https://developers.google.com/maps/documentation/android/start#getting_the_google_maps_android_api_v2) for your application.
-2. Use `MapboxFragment` wherever you would normally use `MapFragment`.
-3. Call `setMapID` on your fragment in your activity's `onResume` method.
+2. Add *MapboxFragment.java* to your project.
+3. Use `MapboxFragment` wherever you would normally use `MapFragment`.
+4. Call `setMapID` on your fragment in your activity's `onResume` method.
 
 ## Credits
 
