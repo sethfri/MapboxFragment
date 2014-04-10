@@ -1,8 +1,9 @@
-package com.mapbox.mapboxview;
+package com.mapbox.mapboxfragment;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -22,63 +23,90 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.TileOverlayOptions;
-import com.google.android.gms.maps.model.UrlTileProvider;
 import android.os.AsyncTask;
-import android.os.Bundle;
-import android.app.Activity;
 import android.util.Log;
-import android.view.Menu;
 
-public class MainActivity extends Activity {
+import com.google.android.gms.maps.*;
+import com.google.android.gms.maps.model.*;
 
+public class MapboxFragment extends MapFragment {
+	
+	private final String TAG = this.getClass().getSimpleName();
+	
 	private String mapID;
 	private GoogleMap gmap;
 	private LatLngBounds bounds;
 	private String url = "";
-	private final String TAG = this.getClass().getSimpleName();
-
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		//setContentView(new MapboxView(getApplicationContext(), "musiccitycenter.ha727h06"));
-		setContentView(R.layout.map_fragment);
-		
-		mapID = "musiccitycenter.vqloko6r";
+	
+	public MapboxFragment() {
+		super();
+	}
+	
+	public String getMapID() {
+		return mapID;
+	}
+	
+	public void setMapID(String mapID) {
 		url = String.format(Locale.ENGLISH, "https://a.tiles.mapbox.com/v3/%s.json", mapID);
 		
+		gmap = getMap();
 		
-		gmap = ((MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment)).getMap();
-		gmap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(36.157158, -86.777326), 15));
-		
-		new TileLoader().execute();
+		new TileLoader().execute(new WeakReference<MapboxFragment>(this));
 	}
+	
+	public class MapboxTileProvider extends UrlTileProvider {
+		private String mapID;
+		private int minZoom;
+		private int maxZoom;
+		
+		public MapboxTileProvider(int width, int height, String mapID, int minZoom, int maxZoom) {
+			super(width, height);
+			
+			this.mapID = mapID;
+			this.minZoom = minZoom;
+			this.maxZoom = maxZoom;
+		}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
+		@Override
+		public URL getTileUrl(int x, int y, int zoom) {
+			String[] letters = { "a", "b", "c", "d" };
+			int randomIndex = new Random().nextInt(4);
+			
+			String URLString = String.format(Locale.ENGLISH, 
+					"https://%s.tiles.mapbox.com/v3/%s/%d/%d/%d%s.%s", 
+					letters[randomIndex], this.mapID, zoom, x, y, "2x", "png");
+			URL url = null;
+			
+			if (checkTileExists(x, y, zoom)) {
+				try {
+					url = new URL(URLString);
+				} catch (MalformedURLException e) {
+					throw new AssertionError(e);
+				}
+			}
+			
+			return url;
+		}
+
+		/*
+		 * Check that the tile server supports the requested x, y and zoom.
+		 */
+		private boolean checkTileExists(int x, int y, int zoom) {
+			boolean tileExists = true;
+
+			if ((zoom < minZoom || zoom > maxZoom)) {
+				tileExists = false;
+			}
+
+			return tileExists;
+		}
 	}
 	
 	private class TileLoader extends 
-		AsyncTask<Void, Void, HashMap<String, Object> > {
+		AsyncTask<WeakReference<MapboxFragment>, Void, HashMap<String, Object> > {
 		
 		@Override
-		protected void onPreExecute() {
-			//setProgressVisibility(true, "Retrieving Tiles", "Shouldn't be long now!");
-			
-		}
-		
-	
-		@Override
-		protected HashMap<String, Object> doInBackground(Void... handlers) {
-			
+		protected HashMap<String, Object> doInBackground(WeakReference<MapboxFragment>... handlers) {
 			HashMap<String, Object> tileMap = new HashMap<String, Object>();
 			try {
 				
@@ -113,6 +141,22 @@ public class MainActivity extends Activity {
 				tileMap.put("bounds", boundsArr);
 				tileMap.put("minzoom", minZoom);
 				tileMap.put("maxzoom", maxZoom);
+				
+				/*ArrayList<Number> centerArrayList = (ArrayList<Number>) tileMap.get("center");
+				LatLng centerCoordinate = new LatLng(centerArrayList.get(1).doubleValue(), centerArrayList.get(0).doubleValue());
+				
+				ArrayList<Number> boundsArrayList = (ArrayList<Number>) tileMap.get("bounds");
+				LatLng northeastCoordinate = new LatLng(((Number) boundsArrayList.get(3)).doubleValue(), ((Number) boundsArrayList.get(2)).doubleValue());
+				LatLng southwestCoordinate = new LatLng(((Number) boundsArrayList.get(1)).doubleValue(), ((Number) boundsArrayList.get(0)).doubleValue());
+				bounds = new LatLngBounds(southwestCoordinate, northeastCoordinate);
+				
+				//int minZoom = ((Number) tileMap.get("minzoom")).intValue();
+				//int maxZoom = ((Number) tileMap.get("maxzoom")).intValue();
+				
+				// TODO - Set the correct width, height
+				MapboxTileProvider tileProvider = new MapboxTileProvider(256, 256, mapID, minZoom, maxZoom);
+				
+				gmap.addTileOverlay(new TileOverlayOptions().tileProvider(tileProvider));*/
 				
 				return tileMap;
 				
@@ -150,56 +194,11 @@ public class MainActivity extends Activity {
 			MapboxTileProvider tileProvider = new MapboxTileProvider(200, 200, mapID, minZoom, maxZoom);
 			
 			gmap.addTileOverlay(new TileOverlayOptions().tileProvider(tileProvider));
+			
+			// TODO - No idea if 5 is a good padding number - I just chose one
+			gmap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 5));
 		}	
-	}
-	
-	public class MapboxTileProvider extends UrlTileProvider {
-		private String mapID;
-		private int minZoom;
-		private int maxZoom;
 		
-		public MapboxTileProvider(int width, int height, String mapID, int minZoom, int maxZoom) {
-			super(width, height);
-			
-			this.mapID = mapID;
-			this.minZoom = minZoom;
-			this.maxZoom = maxZoom;
-		}
-
-		@Override
-		public URL getTileUrl(int x, int y, int zoom) {
-			String[] letters = { "a", "b", "c", "d" };
-			int randomIndex = new Random().nextInt(4);
-			
-			String URLString = String.format(Locale.ENGLISH, 
-					"https://%s.tiles.mapbox.com/v3/%s/%d/%d/%d%s.%s", 
-					letters[randomIndex], this.mapID, zoom, x, y, "@2x", "png");
-			URL url = null;
-			
-			if (checkTileExists(x, y, zoom)) {
-				try {
-					url = new URL(URLString);
-				} catch (MalformedURLException e) {
-					throw new AssertionError(e);
-				}
-			}
-			
-			Log.d(TAG, "URL: " + url.toString());
-			return url;
-		}
-
-		/*
-		 * Check that the tile server supports the requested x, y and zoom.
-		 */
-		private boolean checkTileExists(int x, int y, int zoom) {
-			boolean tileExists = true;
-
-			if ((zoom < minZoom || zoom > maxZoom)) {
-				tileExists = false;
-			}
-
-			return tileExists;
-		}
 	}
 	
 	private String getContent(String url) throws ClientProtocolException, IOException {
@@ -225,5 +224,4 @@ public class MainActivity extends Activity {
 		
 		return sb.toString();
 	}
-
 }
