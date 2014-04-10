@@ -6,7 +6,7 @@ import android.view.Menu;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLngBounds;
-import com.mapbox.mapboxview.R;
+import com.mapbox.mapboxfragment.R;
 
 public class MainActivity extends Activity {
 	//private GoogleMap gmap;
